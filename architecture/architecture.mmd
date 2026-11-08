@@ -1,0 +1,46 @@
+flowchart LR
+  subgraph GH["GitHub"]
+    R1["Repo cloud-security-assessment<br/>Terraform · apps · K8s · workflows seguros"]
+    GA["GitHub Actions<br/>ci · security-scan · deploy · destroy"]
+    GHCR[("GHCR<br/>imagen VAmPI pública")]
+    R1 --> GA
+    GA --> GHCR
+  end
+
+  subgraph DEMO["GitHub · demo aislada"]
+    R2["Repo cicd-vulnerable-demo<br/>workflows AS-IS · secretos canario<br/>sin acceso a Azure"]
+  end
+
+  subgraph ENTRA["Microsoft Entra ID"]
+    OIDC["Identidad de despliegue<br/>credencial federada OIDC"]
+  end
+
+  subgraph AZ["Azure · suscripción personal"]
+    subgraph PLAT["rg-platform"]
+      ST[("Storage privado<br/>estado Terraform")]
+      BUD["Presupuesto y alertas"]
+    end
+    subgraph LAB["azuregoat_app"]
+      AG["AzureGoat<br/>Functions · VM · Storage · Cosmos DB · Automation"]
+    end
+    subgraph APIRG["rg-vampi"]
+      ACA["Container Apps<br/>VAmPI · ingress solo tu IP"]
+    end
+    MON["Activity Log · Defender for Cloud<br/>Log Analytics opcional"]
+  end
+
+  subgraph ONP["On-premise · tu portátil"]
+    VM["Ubuntu Server VM"]
+    KIND["kind · Kubernetes Goat"]
+    CLI["Pod api-test-client"]
+    VM --> KIND --> CLI
+  end
+
+  GA -- "token OIDC" --> OIDC
+  OIDC -- "Owner solo en el RG del lab" --> LAB
+  OIDC -- "Contributor" --> APIRG
+  OIDC -- "acceso a datos del estado" --> ST
+  GHCR --> ACA
+  CLI -- "HTTPS 443 saliente" --> ACA
+  LAB --> MON
+  APIRG --> MON

@@ -1,0 +1,59 @@
+# ── Terraform ──────────────────────────────────────────────
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+# .terraform.lock.hcl SÍ se versiona (despliegues reproducibles)
+
+# ── Artefactos que genera el apply de AzureGoat ───────────
+azure-goat-environment/
+terraform/azuregoat/**/data-api.zip
+terraform/azuregoat/**/func.zip
+
+# ── Secretos y credenciales (regla general) ───────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+kubeconfig
+kubeconfig.*
+local.settings.json
+
+# ── EXCEPCIÓN: artefactos intencionados del laboratorio ───
+# Claves SSH de prueba, plantilla con placeholders y bundle de CA de la función:
+# forman parte de AzureGoat y sin ellos el laboratorio no funciona.
+# OJO: local.settings.json NUNCA se commitea después de un apply
+# (el local-exec escribe claves reales). Revisar git status antes de cada commit.
+!terraform/azuregoat/modules/module-1/resources/storage_account/shared/files/.ssh/keys/*.pem
+!terraform/azuregoat/modules/module-1/resources/azure_function/data/local.settings.json
+!terraform/azuregoat/modules/module-1/resources/azure_function/data/.python_packages/**/cacert.pem
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Docker / Kubernetes ───────────────────────────────────
+docker-compose.override.yml
+secrets.yaml
+secret.yaml
+
+# ── IDE / sistema ─────────────────────────────────────────
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# ── Evidencias del pentest: revisar antes de commitear ────
+pentest/evidence/*
+!pentest/evidence/.gitkeep

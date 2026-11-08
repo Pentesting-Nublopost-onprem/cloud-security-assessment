@@ -1,0 +1,8 @@
+# Finales de línea LF en todo el repo: los scripts y el Terraform se ejecutan en Linux
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
