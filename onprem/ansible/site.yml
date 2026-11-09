@@ -1,0 +1,137 @@
+---
+# Configuración del servidor on-premise de NubloPost (Ubuntu Server 24.04).
+# Se ejecuta dentro de la propia VM:
+#   ansible-playbook -i inventory.ini site.yml -K
+# Cuando el acceso por clave SSH funcione, se desactivan las contraseñas con:
+#   ansible-playbook -i inventory.ini site.yml -K -e harden_ssh=true
+
+- name: Servidor on-premise del laboratorio
+  hosts: onprem
+  become: true
+
+  vars:
+    lab_user: "{{ lookup('ansible.builtin.env', 'SUDO_USER') | default(lookup('ansible.builtin.env', 'USER'), true) }}"
+    lab_timezone: Europe/Madrid
+    harden_ssh: false
+    docker_arch:
+      x86_64: amd64
+      aarch64: arm64
+
+  handlers:
+    - name: Validar la configuración de SSH
+      ansible.builtin.command: sshd -t
+      changed_when: false
+      listen: reiniciar ssh
+
+    - name: Reiniciar SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+      listen: reiniciar ssh
+
+  tasks:
+    # ── Base ──────────────────────────────────────────────────
+    - name: Paquetes base
+      tags: [base]
+      ansible.builtin.apt:
+        name: [git, curl, ca-certificates, gnupg, jq, unzip, unattended-upgrades]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Zona horaria (marcas de tiempo coherentes en las evidencias)
+      tags: [base]
+      community.general.timezone:
+        name: "{{ lab_timezone }}"
+
+    - name: Actualizaciones de seguridad automáticas
+      tags: [base]
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+        mode: "0644"
+
+    # ── Docker Engine (repositorio oficial) ──────────────────
+    - name: Carpeta de claves de APT
+      tags: [docker]
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Clave GPG de Docker
+      tags: [docker]
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Repositorio de Docker
+      tags: [docker]
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ docker_arch[ansible_architecture] }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        filename: docker
+        state: present
+
+    - name: Docker Engine y plugins
+      tags: [docker]
+      ansible.builtin.apt:
+        name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+        state: present
+        update_cache: true
+
+    - name: Docker arrancado y habilitado al inicio
+      tags: [docker, services]
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Usuario del laboratorio en el grupo docker
+      tags: [docker]
+      ansible.builtin.user:
+        name: "{{ lab_user }}"
+        groups: docker
+        append: true
+
+    # ── SSH solo con clave (únicamente con -e harden_ssh=true) ──
+    - name: Comprobar que hay una clave SSH autorizada
+      tags: [ssh]
+      when: harden_ssh | bool
+      ansible.builtin.stat:
+        path: "/home/{{ lab_user }}/.ssh/authorized_keys"
+      register: authorized_keys
+
+    - name: No desactivar las contraseñas sin una clave que funcione
+      tags: [ssh]
+      when: harden_ssh | bool
+      ansible.builtin.assert:
+        that:
+          - authorized_keys.stat.exists
+          - authorized_keys.stat.size > 0
+        fail_msg: "No hay claves en /home/{{ lab_user }}/.ssh/authorized_keys: añade tu clave pública antes de desactivar las contraseñas."
+
+    - name: Directorio que sshd necesita para validar su configuración
+      tags: [ssh]
+      when: harden_ssh | bool
+      ansible.builtin.file:
+        path: /run/sshd
+        state: directory
+        mode: "0755"
+
+    - name: SSH solo con clave y sin acceso de root
+      tags: [ssh]
+      when: harden_ssh | bool
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/10-hardening.conf
+        content: |
+          # Gestionado por Ansible (onprem/ansible/site.yml)
+          PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          PermitRootLogin no
+        mode: "0644"
+      notify: reiniciar ssh
