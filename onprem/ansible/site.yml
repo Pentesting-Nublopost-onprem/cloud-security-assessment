@@ -4,6 +4,8 @@
 #   ansible-playbook -i inventory.ini site.yml -K
 # Cuando el acceso por clave SSH funcione, se desactivan las contraseñas con:
 #   ansible-playbook -i inventory.ini site.yml -K -e harden_ssh=true
+# Solo las herramientas de Kubernetes (kind, kubectl, Helm):
+#   ansible-playbook -i inventory.ini site.yml -K --tags k8s
 
 - name: Servidor on-premise del laboratorio
   hosts: onprem
@@ -13,9 +15,19 @@
     lab_user: "{{ lookup('ansible.builtin.env', 'SUDO_USER') | default(lookup('ansible.builtin.env', 'USER'), true) }}"
     lab_timezone: Europe/Madrid
     harden_ssh: false
-    docker_arch:
+    cpu_arch_map:
       x86_64: amd64
       aarch64: arm64
+    cpu_arch: "{{ cpu_arch_map[ansible_architecture] }}"
+
+    # Kubernetes: versiones fijadas (revisadas el 10/11/2026). Para actualizar,
+    # se cambia la versión: el checksum oficial se descarga de la misma publicación.
+    kind_version: v0.33.0      # su nodo por defecto es Kubernetes v1.37.0
+    kubectl_version: v1.37.2   # misma versión menor que el clúster
+    helm_version: v4.3.1       # Helm 3 deja de recibir parches de seguridad en febrero de 2027
+    kubectl_url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ cpu_arch }}/kubectl"
+    kind_url: "https://github.com/kubernetes-sigs/kind/releases/download/{{ kind_version }}/kind-linux-{{ cpu_arch }}"
+    helm_url: "https://get.helm.sh/helm-{{ helm_version }}-linux-{{ cpu_arch }}.tar.gz"
 
   handlers:
     - name: Validar la configuración de SSH
@@ -34,7 +46,7 @@
     - name: Paquetes base
       tags: [base]
       ansible.builtin.apt:
-        name: [git, curl, ca-certificates, gnupg, jq, unzip, unattended-upgrades]
+        name: [git, curl, ca-certificates, gnupg, jq, unzip, unattended-upgrades, bash-completion]
         state: present
         update_cache: true
         cache_valid_time: 3600
@@ -72,7 +84,7 @@
       tags: [docker]
       ansible.builtin.apt_repository:
         repo: >-
-          deb [arch={{ docker_arch[ansible_architecture] }} signed-by=/etc/apt/keyrings/docker.asc]
+          deb [arch={{ cpu_arch }} signed-by=/etc/apt/keyrings/docker.asc]
           https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         filename: docker
         state: present
@@ -97,6 +109,85 @@
         name: "{{ lab_user }}"
         groups: docker
         append: true
+
+    # ── Kubernetes: kind, kubectl y Helm ──────────────────────
+    # Versión fijada y SHA-256 oficial comprobado en cada descarga: si no
+    # coincide, la tarea falla y el binario no se instala.
+    - name: Límites de inotify que recomienda kind
+      tags: [k8s]
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/99-kind.conf
+      loop:
+        - { name: fs.inotify.max_user_watches, value: "524288" }
+        - { name: fs.inotify.max_user_instances, value: "512" }
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Instalar kubectl {{ kubectl_version }}
+      tags: [k8s]
+      ansible.builtin.get_url:
+        url: "{{ kubectl_url }}"
+        checksum: "sha256:{{ kubectl_url }}.sha256"
+        dest: /usr/local/bin/kubectl
+        mode: "0755"
+
+    - name: Instalar kind {{ kind_version }}
+      tags: [k8s]
+      ansible.builtin.get_url:
+        url: "{{ kind_url }}"
+        checksum: "sha256:{{ kind_url }}.sha256sum"
+        dest: /usr/local/bin/kind
+        mode: "0755"
+
+    - name: Carpeta de Helm {{ helm_version }}
+      tags: [k8s]
+      ansible.builtin.file:
+        path: "/opt/helm/{{ helm_version }}"
+        state: directory
+        mode: "0755"
+
+    - name: Descargar Helm {{ helm_version }}
+      tags: [k8s]
+      ansible.builtin.get_url:
+        url: "{{ helm_url }}"
+        checksum: "sha256:{{ helm_url }}.sha256"
+        dest: "/opt/helm/{{ helm_url | basename }}"
+        mode: "0644"
+
+    - name: Extraer Helm {{ helm_version }}
+      tags: [k8s]
+      ansible.builtin.unarchive:
+        src: "/opt/helm/{{ helm_url | basename }}"
+        dest: "/opt/helm/{{ helm_version }}"
+        remote_src: true
+        creates: "/opt/helm/{{ helm_version }}/linux-{{ cpu_arch }}/helm"
+
+    - name: Enlazar /usr/local/bin/helm a la versión {{ helm_version }}
+      tags: [k8s]
+      ansible.builtin.file:
+        src: "/opt/helm/{{ helm_version }}/linux-{{ cpu_arch }}/helm"
+        dest: /usr/local/bin/helm
+        state: link
+        force: true
+
+    - name: Generar el autocompletado de bash
+      tags: [k8s]
+      ansible.builtin.command: "/usr/local/bin/{{ item }} completion bash"
+      loop: [kubectl, kind, helm]
+      register: k8s_completion
+      changed_when: false
+
+    - name: Instalar el autocompletado de bash
+      tags: [k8s]
+      ansible.builtin.copy:
+        content: "{{ item.stdout }}\n"
+        dest: "/etc/bash_completion.d/{{ item.item }}"
+        mode: "0644"
+      loop: "{{ k8s_completion.results }}"
+      loop_control:
+        label: "{{ item.item }}"
 
     # ── SSH solo con clave (únicamente con -e harden_ssh=true) ──
     - name: Comprobar que hay una clave SSH autorizada
