@@ -1,0 +1,5 @@
+# Copia como terraform.tfvars (no se versiona) si prefieres no pasar -var.
+allowed_ip = "203.0.113.10" # tu IP pública: desde tu PC, https://ifconfig.me
+
+# Mejor fijar la imagen al commit que la construyó:
+# image = "ghcr.io/pentesting-nublopost-onprem/vampi:<sha-del-commit>"
