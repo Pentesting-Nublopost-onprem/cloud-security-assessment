@@ -1,0 +1,6 @@
+# Copia como terraform.tfvars (no se versiona) si prefieres no pasar -var.
+alert_email   = "tu@correo"
+budget_amount = 20
+
+# Si tu suscripción no admite presupuestos (algunas de estudiante):
+# create_budget = false
