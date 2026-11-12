@@ -40,7 +40,7 @@ Ansible se ejecuta dentro de la propia VM, contra `localhost`:
 
 ```bash
 sudo apt update && sudo apt install -y ansible git
-git clone https://github.com/cristianrdgzzz/cloud-security-assessment.git
+git clone https://github.com/Pentesting-Nublopost-onprem/cloud-security-assessment.git
 cd cloud-security-assessment/onprem/ansible
 ansible-playbook -i inventory.ini site.yml -K
 ```
