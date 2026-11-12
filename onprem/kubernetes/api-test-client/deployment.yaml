@@ -1,0 +1,60 @@
+# Servicio on-prem que consume la API de NubloPost en Azure.
+# El pod está endurecido; sus credenciales viven en un Secret del clúster, que
+# es justo lo que expone una mala configuración de RBAC (cadena on-prem -> cloud).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-test-client
+  labels:
+    app: api-test-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-test-client
+  template:
+    metadata:
+      labels:
+        app: api-test-client
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: client
+          image: python:3.13-alpine
+          # En espera; las pruebas se lanzan con kubectl exec (ver README).
+          command:
+            - python
+            - -c
+            - "import signal, sys; signal.signal(signal.SIGTERM, lambda *_: sys.exit(0)); signal.pause()"
+          env:
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+          envFrom:
+            - secretRef:
+                name: vampi-credentials
+          volumeMounts:
+            - name: hybrid-check
+              mountPath: /app
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: hybrid-check
+          configMap:
+            name: hybrid-check
