@@ -10,24 +10,6 @@ variable "azuregoat_location" {
   default     = "eastus"
 }
 
-variable "github_org" {
-  description = "Organización de GitHub dueña del repositorio."
-  type        = string
-  default     = "Pentesting-Nublopost-onprem"
-}
-
-variable "github_repo" {
-  description = "Repositorio cuyos workflows pueden desplegar en Azure."
-  type        = string
-  default     = "cloud-security-assessment"
-}
-
-variable "github_environment" {
-  description = "Environment de GitHub que debe declarar el job para obtener el token OIDC."
-  type        = string
-  default     = "azure-lab"
-}
-
 variable "create_budget" {
   description = "Crear el presupuesto de la suscripción (algunas suscripciones de estudiante no admiten presupuestos)."
   type        = bool

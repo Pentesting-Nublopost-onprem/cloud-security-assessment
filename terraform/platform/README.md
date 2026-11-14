@@ -4,22 +4,14 @@ Base común del laboratorio en Azure. Se despliega una vez, antes que las demás
 
 | Recurso | Nombre | Para qué |
 |---|---|---|
-| Grupos de recursos | `rg-platform`, `rg-vampi`, `azuregoat_app` | Separar la plataforma de las pilas vulnerables. `azuregoat_app` lo exige AzureGoat |
+| Grupos de recursos | `rg-platform` y `rg-vampi` (swedencentral), `azuregoat_app` (eastus) | Separar la plataforma de las pilas vulnerables. `azuregoat_app` lo exige AzureGoat |
 | Storage del estado | `tfstate<hash>` + contenedor `tfstate` | Estado remoto de todas las raíces. Sin claves compartidas: solo Entra ID |
-| Identidad de despliegue | `id-github-deploy` | GitHub Actions entra con OIDC, sin secretos guardados |
-| Credencial federada | `github-azure-lab` | Solo acepta tokens de `Pentesting-Nublopost-onprem/cloud-security-assessment` con el environment `azure-lab` |
-| Roles | ver abajo | Mínimos por grupo de recursos |
+| Rol de datos | Storage Blob Data Contributor sobre `tfstate` | Para quien ejecuta Terraform (el operador) |
 | Presupuesto | `budget-cloud-security-lab` | Avisos al 50 % y 80 % del gasto real y al 100 % del previsto |
 
-Además registra los proveedores de recursos de todas las pilas (Container Apps, Functions, Cosmos DB…), porque azurerm 5.x ya no lo hace solo y la identidad de despliegue no tiene permisos de suscripción.
+Además registra los proveedores de recursos de todas las pilas (Container Apps, Functions, Cosmos DB…), porque azurerm 5.x ya no lo hace solo.
 
-## Permisos de la identidad de despliegue
-
-| Ámbito | Rol | Motivo |
-|---|---|---|
-| Contenedor `tfstate` | Storage Blob Data Contributor | Leer y escribir el estado |
-| `rg-vampi` | Contributor | Desplegar VAmPI |
-| `azuregoat_app` | Owner | AzureGoat crea asignaciones de roles. Riesgo aceptado y limitado a ese grupo |
+**Sin despliegue desde GitHub.** Todas las raíces se aplican desde Azure Cloud Shell con la sesión del operador; GitHub no tiene ninguna credencial de Azure. La identidad OIDC prevista para desplegar desde GitHub Actions se descartó el 15/11/2026 para ganar tiempo.
 
 ## Primer despliegue (Azure Cloud Shell, Bash)
 
@@ -39,16 +31,17 @@ cd cloud-security-assessment/terraform/platform
 ```bash
 SA=$(az storage account list -g rg-platform --query "[0].name" -o tsv)
 terraform init -backend-config="storage_account_name=$SA"
-terraform plan
+terraform apply -var 'alert_email=tu@correo'
 ```
 
-## Salidas
+## Salida
 
-`state_storage_account`, `deploy_identity_client_id`, `tenant_id`, `subscription_id` y `github_oidc_subject`. Las tres del medio se guardan como variables (no secretos) del environment `azure-lab` en GitHub cuando se configuren los workflows de despliegue.
+`state_storage_account`: nombre del Storage del estado, que se pasa a `terraform init` en las demás raíces.
 
 ## Decisiones de seguridad
 
 - **Estado sin claves:** `shared_access_key_enabled = false`, TLS 1.2, sin acceso anónimo, versionado y papelera de 7 días.
-- **Endpoint público del Storage:** los runners de GitHub no tienen IP fija. El acceso exige identidad y rol de datos. TO-BE: endpoint privado con runner propio.
-- **OIDC por environment:** el token solo sirve a jobs de este repositorio que usen el environment `azure-lab`, que se limitará a la rama `main` y con aprobación manual al configurar los workflows. Los pull requests desde forks no reciben token.
-- **Presupuesto:** avisa, no corta el gasto. Los recursos facturables se destruyen al acabar cada sesión.
+- **Endpoint público del Storage:** Cloud Shell no tiene IP fija. El acceso exige identidad y rol de datos. TO-BE: endpoint privado.
+- **Sin credenciales de Azure en GitHub:** nada que robar desde el repositorio o un workflow. TO-BE, si el despliegue pasa a GitHub Actions: identidad con credencial federada OIDC, limitada a un environment de `main` con aprobación.
+- **Presupuesto:** avisa, no corta el gasto. Los recursos facturables se destruyen al acabar.
+- **Región:** West Europe no admitía altas nuevas el 14/11/2026; por eso `swedencentral` es la región por defecto.
