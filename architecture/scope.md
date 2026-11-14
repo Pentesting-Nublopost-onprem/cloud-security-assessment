@@ -19,9 +19,9 @@ Documento de referencia para todas las pruebas del proyecto **Cloud Security Ass
 |---|---|
 | Azure — laboratorio | Resource group `azuregoat_app`: Function Apps, Storage Account y contenedores, Cosmos DB, VM, red, cuenta de Automation, identidades gestionadas y RBAC |
 | Azure — API | Resource group `rg-vampi`: Container Apps con VAmPI |
-| Azure — plataforma | Resource group `rg-platform` (estado de Terraform, identidad OIDC, presupuesto): **solo revisión de configuración, sin explotación** |
+| Azure — plataforma | Resource group `rg-platform` (estado de Terraform y presupuesto): **solo revisión de configuración, sin explotación** |
 | On-premise | VM Ubuntu Server, Docker, clúster kind, Kubernetes Goat y pod `api-test-client` |
-| GitHub | Repositorio `cloud-security-assessment`: workflows, configuración e integración OIDC (revisión de configuración) |
+| GitHub | Repositorio `cloud-security-assessment`: workflows y configuración (revisión de configuración; GitHub no tiene acceso a Azure) |
 | Código | Backend Python y frontend de AzureGoat, VAmPI, Terraform y manifiestos de Kubernetes |
 
 ## 4. Fuera del alcance

@@ -26,7 +26,6 @@ flowchart LR
   end
 
   CS["Azure Cloud Shell"]
-  GHA["GitHub Actions<br/>IPs variables"]
 
   BR -- "SSH 127.0.0.1:2222" --> SSHD
   BR -. "túnel SSH 1230-1236" .-> PF
@@ -36,8 +35,6 @@ flowchart LR
   NET --> AG
   CS -- "HTTPS · Entra ID" --> ARM
   CS -- "HTTPS · Entra ID" --> ST
-  GHA -- "OIDC · HTTPS" --> ARM
-  GHA -- "OIDC · HTTPS" --> ST
 ```
 
 ## Flujos de red
@@ -51,8 +48,7 @@ flowchart LR
 | N5 | `api-test-client` | VAmPI | HTTPS 443 | Consumo de la API | Lista de IPs y credenciales de la API |
 | N6 | Auditor | VAmPI y AzureGoat | HTTPS 443 | Pruebas | VAmPI: lista de IPs. AzureGoat: expuesto |
 | N7 | Cloud Shell | ARM y Storage del estado | HTTPS 443 | Terraform | Entra ID; rol de datos sobre el estado |
-| N8 | GitHub Actions | Entra ID, ARM y Storage del estado | HTTPS 443 | Despliegues (fase CI/CD) | OIDC por environment; roles por grupo |
-| N9 | Container Apps | GHCR | HTTPS 443 | Descarga de la imagen | Paquete público, sin credenciales |
+| N8 | Container Apps | GHCR | HTTPS 443 | Descarga de la imagen | Paquete público, sin credenciales |
 
 La IP pública de casa es dinámica: si cambia, VAmPI responde 403 hasta que se vuelve a aplicar `terraform/vampi` con la nueva.
 
@@ -76,6 +72,7 @@ La IP pública de casa es dinámica: si cambia, VAmPI responde 403 hasta que se 
 
 - VPN o red privada entre el on-premise y Azure.
 - Puertos entrantes hacia la VM, salvo el SSH local.
+- Credenciales de Azure en GitHub: Actions no tiene acceso a Azure.
 - Runner de GitHub autoalojado.
 - API server de Kubernetes expuesto.
 
@@ -83,6 +80,6 @@ La IP pública de casa es dinámica: si cambia, VAmPI responde 403 hasta que se 
 
 - NetworkPolicy de salida en `nublopost-client`: solo DNS y HTTPS hacia VAmPI.
 - NetworkPolicies entre los namespaces de Kubernetes Goat (el CNI de kind las aplica).
-- Endpoint privado para el Storage del estado, con runner propio.
+- Endpoint privado para el Storage del estado.
 - VAmPI detrás de un WAF, o con ingress interno si la API no tiene que ser pública.
 - Corrección de la exposición de AzureGoat según los hallazgos.

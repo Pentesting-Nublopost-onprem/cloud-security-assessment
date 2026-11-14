@@ -1,15 +1,13 @@
 flowchart LR
   subgraph GH["GitHub"]
     R1["Repo cloud-security-assessment<br/>Terraform · apps · K8s · workflows seguros"]
-    GA["GitHub Actions<br/>ci · security-scan · deploy · destroy"]
+    GA["GitHub Actions<br/>build-vampi · security-scan"]
     GHCR[("GHCR<br/>imagen VAmPI pública")]
     R1 --> GA
     GA --> GHCR
   end
 
-  subgraph ENTRA["Microsoft Entra ID"]
-    OIDC["Identidad de despliegue<br/>credencial federada OIDC"]
-  end
+  OP(["Auditor<br/>Azure Cloud Shell"])
 
   subgraph AZ["Azure · suscripción personal"]
     subgraph PLAT["rg-platform"]
@@ -32,10 +30,7 @@ flowchart LR
     VM --> KIND --> CLI
   end
 
-  GA -- "token OIDC" --> OIDC
-  OIDC -- "Owner solo en el RG del lab" --> LAB
-  OIDC -- "Contributor" --> APIRG
-  OIDC -- "acceso a datos del estado" --> ST
+  OP -- "Terraform" --> AZ
   GHCR --> ACA
   CLI -- "HTTPS 443 saliente" --> ACA
   LAB --> MON

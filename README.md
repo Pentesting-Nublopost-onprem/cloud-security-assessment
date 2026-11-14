@@ -35,15 +35,13 @@ La Function App pública cumple el papel que en un entorno Active Directory clá
 flowchart LR
   subgraph GH["GitHub"]
     R1["Repo cloud-security-assessment<br/>Terraform · apps · K8s · workflows seguros"]
-    GA["GitHub Actions<br/>ci · security-scan · deploy · destroy"]
+    GA["GitHub Actions<br/>build-vampi · security-scan"]
     GHCR[("GHCR<br/>imagen VAmPI pública")]
     R1 --> GA
     GA --> GHCR
   end
 
-  subgraph ENTRA["Microsoft Entra ID"]
-    OIDC["Identidad de despliegue<br/>credencial federada OIDC"]
-  end
+  OP(["Auditor<br/>Azure Cloud Shell"])
 
   subgraph AZ["Azure · suscripción personal"]
     subgraph PLAT["rg-platform"]
@@ -66,10 +64,7 @@ flowchart LR
     VM --> KIND --> CLI
   end
 
-  GA -- "token OIDC" --> OIDC
-  OIDC -- "Owner solo en el RG del lab" --> LAB
-  OIDC -- "Contributor" --> APIRG
-  OIDC -- "acceso a datos del estado" --> ST
+  OP -- "Terraform" --> AZ
   GHCR --> ACA
   CLI -- "HTTPS 443 saliente" --> ACA
   LAB --> MON
@@ -80,7 +75,7 @@ flowchart LR
 |---|---|
 | On-premise | VM Ubuntu Server 24.04 (VirtualBox) configurada con Ansible, Docker, kind, Kubernetes Goat y el pod `api-test-client` |
 | Azure | AzureGoat (Function Apps, Storage, Cosmos DB, VM, Automation, identidades y RBAC), VAmPI en Container Apps, estado de Terraform y monitorización |
-| DevSecOps | GitHub, GitHub Actions con OIDC, Terraform y escáneres de seguridad |
+| DevSecOps | GitHub, GitHub Actions (imagen de VAmPI y escáneres de seguridad) y Terraform desde Azure Cloud Shell |
 
 **Repositorio:** `cloud-security-assessment` (este): infraestructura, aplicaciones, workflows seguros y documentación.
 
@@ -97,7 +92,7 @@ Los escenarios de CI/CD vulnerables (repositorio aparte `cicd-vulnerable-demo`) 
 | Cuenta de Azure Automation | Tareas programadas de mantenimiento; identidad gestionada con rol Owner sobre el resource group |
 | API de catálogo (VAmPI) | API REST en Container Apps que consumen los servicios internos |
 | Servidor on-premise | Kubernetes con servicios internos y el cliente de la API |
-| Repositorio y pipeline CI/CD | Código, Terraform, workflows e identidad de despliegue (OIDC) |
+| Repositorio y pipeline CI/CD | Código, Terraform y workflows (GitHub no tiene credenciales de Azure) |
 
 ## Usuarios y actores
 
@@ -215,7 +210,7 @@ Problemas visibles ya en el AS-IS:
      ▼
  Defender for Cloud + Azure Monitor (detección continua)
 
- GitHub:     OIDC restringido · permisos mínimos · acciones fijadas a SHA · Gitleaks · protección de ramas
+ GitHub:     permisos mínimos · acciones fijadas a SHA · Gitleaks · protección de ramas · sin credenciales de Azure
  Kubernetes: RBAC mínimo · Network Policies · sin contenedores privilegiados · Secrets protegidos
 ```
 
@@ -250,7 +245,7 @@ Fases de la metodología CEH (EC-Council), adaptadas a caja blanca:
 1. **Preparación del entorno:** repositorio, servidor Ubuntu Server y herramientas (Git, Docker, Azure CLI, Terraform, Ansible, Python).
 2. **Diseño del escenario** empresarial y de activos (NubloPost).
 3. **Despliegue de la arquitectura** como código: plataforma Azure, AzureGoat, VAmPI y Kubernetes on-premise.
-4. **DevSecOps y CI/CD:** GitHub Actions con OIDC y análisis automatizado.
+4. **DevSecOps y CI/CD:** análisis automatizado en GitHub Actions (IaC, código, dependencias, secretos, imagen y Kubernetes).
 5. **Pentesting de caja blanca** y detección de vulnerabilidades: Azure, API y Kubernetes, más la revisión de la configuración de GitHub y del pipeline.
 6. **Hardening y mitigación** (TO-BE).
 7. **Re-test y validación:** los mismos escáneres y pruebas sobre el TO-BE.
@@ -267,7 +262,7 @@ AS-IS → Vulnerabilidades (Fase 5) → Hardening (Fase 6) → Re-test (Fase 7) 
 cloud-security-assessment/
 ├── architecture/        Arquitectura, diagramas, diseño de red y alcance
 ├── terraform/
-│   ├── platform/        Estado remoto, identidad OIDC, resource groups y presupuesto
+│   ├── platform/        Estado remoto, resource groups y presupuesto
 │   ├── azuregoat/       AzureGoat original (azurerm ~> 3.11.0)
 │   ├── vampi/           VAmPI en Container Apps
 │   └── monitoring/      Log Analytics y diagnostic settings (opcional)
@@ -275,7 +270,7 @@ cloud-security-assessment/
 │   ├── ansible/         Configuración del servidor Ubuntu (Docker, kind, kubectl, Helm)
 │   └── kubernetes/      kind-config, api-test-client y políticas
 ├── applications/vampi/  Imagen de la API
-├── .github/workflows/   ci · security-scan · deploy-azure · destroy-lab
+├── .github/workflows/   build-vampi · security-scan
 ├── security/            Configuración de Checkov, Semgrep, Trivy, Gitleaks y Kubescape
 ├── pentest/             Metodología, pruebas y evidencias por dominio
 └── reports/             Hallazgos, remediación e informe final
