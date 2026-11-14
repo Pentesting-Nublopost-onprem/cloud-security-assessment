@@ -7,10 +7,6 @@ flowchart LR
     GA --> GHCR
   end
 
-  subgraph DEMO["GitHub · demo aislada"]
-    R2["Repo cicd-vulnerable-demo<br/>workflows AS-IS · secretos canario<br/>sin acceso a Azure"]
-  end
-
   subgraph ENTRA["Microsoft Entra ID"]
     OIDC["Identidad de despliegue<br/>credencial federada OIDC"]
   end

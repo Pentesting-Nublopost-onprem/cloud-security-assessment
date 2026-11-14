@@ -10,7 +10,6 @@ flowchart LR
     REPO["cloud-security-assessment<br/>Terraform · apps · K8s · workflows"]
     ACT["GitHub Actions"]
     GHCR[("GHCR<br/>imagen de VAmPI")]
-    DEMO["cicd-vulnerable-demo<br/>CI/CD inseguro · sin acceso a Azure"]
     REPO --> ACT --> GHCR
   end
 
@@ -63,7 +62,6 @@ flowchart LR
 | Azure | VAmPI en Container Apps | API pública de NubloPost | `terraform/vampi/`, `applications/vampi/` |
 | Azure | AzureGoat | Aplicación web y servicios de NubloPost | `terraform/azuregoat/` |
 | GitHub | Repositorio principal, Actions y GHCR | Código, automatización e imágenes | `.github/workflows/` |
-| GitHub | `cicd-vulnerable-demo` | Escenarios de CI/CD inseguros, aislados de Azure | Repositorio aparte |
 | Entra ID | `id-github-deploy` | Identidad de despliegue sin secretos | `terraform/platform/` |
 
 ## Identidades y permisos
@@ -110,4 +108,4 @@ flowchart LR
 
 ## AS-IS y TO-BE
 
-Las vulnerabilidades de AzureGoat, VAmPI y Kubernetes Goat, junto con los escenarios de `cicd-vulnerable-demo`, forman el estado AS-IS y no se corrigen en origen. El TO-BE se documenta por hallazgo en `reports/remediation/` y se demuestra en los componentes propios (plataforma, pipeline seguro, cliente endurecido, políticas de Kubernetes). El detalle de red está en [network-design.md](network-design.md).
+Las vulnerabilidades de AzureGoat, VAmPI y Kubernetes Goat forman el estado AS-IS y no se corrigen en origen. El TO-BE se documenta por hallazgo en `reports/remediation/` y se demuestra en los componentes propios (plataforma, pipeline seguro, cliente endurecido, políticas de Kubernetes). El detalle de red está en [network-design.md](network-design.md).

@@ -41,10 +41,6 @@ flowchart LR
     GA --> GHCR
   end
 
-  subgraph DEMO["GitHub · demo aislada"]
-    R2["Repo cicd-vulnerable-demo<br/>workflows AS-IS · secretos canario<br/>sin acceso a Azure"]
-  end
-
   subgraph ENTRA["Microsoft Entra ID"]
     OIDC["Identidad de despliegue<br/>credencial federada OIDC"]
   end
@@ -86,10 +82,9 @@ flowchart LR
 | Azure | AzureGoat (Function Apps, Storage, Cosmos DB, VM, Automation, identidades y RBAC), VAmPI en Container Apps, estado de Terraform y monitorización |
 | DevSecOps | GitHub, GitHub Actions con OIDC, Terraform y escáneres de seguridad |
 
-**Repositorios**
+**Repositorio:** `cloud-security-assessment` (este): infraestructura, aplicaciones, workflows seguros y documentación.
 
-- `cloud-security-assessment` (este repositorio): infraestructura, aplicaciones, workflows seguros y documentación.
-- `cicd-vulnerable-demo`: escenarios inseguros de GitHub Actions con secretos canario, sin ningún acceso a Azure.
+Los escenarios de CI/CD vulnerables (repositorio aparte `cicd-vulnerable-demo`) quedan fuera del alcance actual por falta de tiempo; se podrán añadir como ampliación.
 
 ## Activos
 
@@ -193,7 +188,6 @@ Problemas visibles ya en el AS-IS:
 - Sin segmentación de red entre la Function App y los recursos de datos.
 - Convención de nombres predecible entre los contenedores prod y dev.
 - Cadena de escalada de privilegios viable de Contributor a Owner.
-- Escenarios inseguros de CI/CD (en el repositorio `cicd-vulnerable-demo`).
 
 ## Arquitectura objetivo (TO-BE)
 
@@ -257,7 +251,7 @@ Fases de la metodología CEH (EC-Council), adaptadas a caja blanca:
 2. **Diseño del escenario** empresarial y de activos (NubloPost).
 3. **Despliegue de la arquitectura** como código: plataforma Azure, AzureGoat, VAmPI y Kubernetes on-premise.
 4. **DevSecOps y CI/CD:** GitHub Actions con OIDC y análisis automatizado.
-5. **Pentesting de caja blanca** y detección de vulnerabilidades: Azure, API, Kubernetes y GitHub/CI/CD.
+5. **Pentesting de caja blanca** y detección de vulnerabilidades: Azure, API y Kubernetes, más la revisión de la configuración de GitHub y del pipeline.
 6. **Hardening y mitigación** (TO-BE).
 7. **Re-test y validación:** los mismos escáneres y pruebas sobre el TO-BE.
 8. **Evidencias, matriz de cobertura y documentación.**

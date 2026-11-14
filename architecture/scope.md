@@ -21,12 +21,13 @@ Documento de referencia para todas las pruebas del proyecto **Cloud Security Ass
 | Azure — API | Resource group `rg-vampi`: Container Apps con VAmPI |
 | Azure — plataforma | Resource group `rg-platform` (estado de Terraform, identidad OIDC, presupuesto): **solo revisión de configuración, sin explotación** |
 | On-premise | VM Ubuntu Server, Docker, clúster kind, Kubernetes Goat y pod `api-test-client` |
-| GitHub | Repositorios `cloud-security-assessment` y `cicd-vulnerable-demo`: workflows, configuración e integración OIDC |
+| GitHub | Repositorio `cloud-security-assessment`: workflows, configuración e integración OIDC (revisión de configuración) |
 | Código | Backend Python y frontend de AzureGoat, VAmPI, Terraform y manifiestos de Kubernetes |
 
 ## 4. Fuera del alcance
 
-- Cualquier recurso fuera de los resource groups del laboratorio y de los dos repositorios.
+- Cualquier recurso fuera de los resource groups del laboratorio y del repositorio del proyecto.
+- Escenarios de CI/CD vulnerables (repositorio `cicd-vulnerable-demo`): aplazados por falta de tiempo; quedan como ampliación.
 - La infraestructura de Microsoft Azure, GitHub o terceros (planos de control y servicios compartidos).
 - Denegación de servicio, pruebas de carga y acciones destructivas no reversibles.
 - Ingeniería social y cualquier prueba dirigida a personas.
@@ -39,7 +40,7 @@ Documento de referencia para todas las pruebas del proyecto **Cloud Security Ass
 - **Credenciales de prueba:** ficticias, canario o de alcance mínimo; nunca credenciales personales ni reutilizables.
 - **Persistencia y cambios:** solo para demostrar impacto; se documentan y se revierten en la misma sesión.
 - **Registros de auditoría:** no se borran; se analiza qué podría manipular un atacante y qué evidencias se conservan.
-- **Terraform:** nunca se ejecuta desde una carpeta sincronizada en la nube (OneDrive); solo desde el pipeline o desde un entorno Linux local.
+- **Terraform:** nunca se ejecuta desde una carpeta sincronizada en la nube (OneDrive); solo desde Azure Cloud Shell o un entorno Linux.
 
 ## 6. Tratamiento de evidencias
 
