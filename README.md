@@ -144,10 +144,10 @@ Los escenarios de CI/CD vulnerables (repositorio aparte `cicd-vulnerable-demo`) 
 |---|---|
 | Recursos Azure del laboratorio (`azuregoat_app`, `rg-vampi`, `rg-platform`) | Infraestructura de terceros o corporativa |
 | Servidor on-premise y clúster Kubernetes local | Ataques contra la infraestructura de GitHub o de Microsoft |
-| Repositorios GitHub del proyecto y sus workflows | Denegación de servicio y pruebas destructivas |
+| Repositorio del proyecto y sus workflows (revisión de configuración) | Denegación de servicio y pruebas destructivas |
 | Terraform y configuración desplegada | Ingeniería social |
 | Pruebas de concepto de escalada y persistencia controladas | Persistencia fuera del laboratorio |
-| Análisis de logs y detección | Borrado de registros de auditoría reales |
+| Revisión de la detección (Defender for Cloud y Activity Log) | Borrado de registros de auditoría reales |
 
 **Áreas de seguridad:** IAM, redes, almacenamiento, secretos, aplicaciones y APIs, contenedores, CI/CD, auditoría y hardening.
 
@@ -218,26 +218,28 @@ Problemas visibles ya en el AS-IS:
 
 ## Metodología
 
-Fases de la metodología CEH (EC-Council), adaptadas a caja blanca:
+Fases de la metodología CEH (EC-Council), adaptadas a caja blanca. El detalle (sesiones de prueba, formato de cada hallazgo, criptografía y evidencias) está en [`pentest/methodology.md`](pentest/methodology.md).
 
 1. **Reconocimiento:** arquitectura, inventario de activos, repositorio, identidades y permisos.
-2. **Escaneo y enumeración:** IaC, análisis estático de código, dependencias, secretos, postura cloud (CSPM), workflows y manifiestos de Kubernetes.
-3. **Obtención de acceso:** pruebas de concepto controladas, incluida la escalada de privilegios.
-4. **Mantenimiento del acceso:** persistencia demostrada, documentada y revertida.
-5. **Borrado de huellas:** qué podría manipular un atacante y qué evidencias se conservan; limpieza de los artefactos propios.
+2. **Escaneo y enumeración:** escáneres en el pipeline (IaC, código, dependencias, secretos e imagen), Kubescape sobre el clúster y comprobaciones de criptografía.
+3. **Obtención de acceso:** prueba de concepto de cada hallazgo principal, incluida la escalada de privilegios.
+4. **Mantenimiento del acceso:** una demostración de persistencia en Azure, documentada y revertida.
+5. **Borrado de huellas:** qué deja ese ataque en el Activity Log y qué podría manipular un atacante; limpieza de los artefactos propios.
 
-**Matriz de cobertura:** para cada hallazgo, qué herramienta lo detecta y qué solo aparece en la revisión manual, antes y después del hardening.
+**Hallazgos:** entre 6 y 8 principales, repartidos por áreas y explicados paso a paso; el resto, en una tabla complementaria a partir de los escáneres.
+
+**Matriz de cobertura:** para cada hallazgo principal, qué herramienta lo detecta y qué solo aparece en la revisión manual.
 
 ## Herramientas
 
 | Área | Herramientas |
 |---|---|
-| Cloud e IaC | Terraform, Azure CLI, Checkov, Trivy, Prowler, Defender for Cloud |
+| Cloud e IaC | Terraform, Azure CLI, Checkov, Trivy, Defender for Cloud |
 | Configuración on-premise | Ansible |
-| Código y dependencias | Semgrep, Bandit, pip-audit |
+| Código y dependencias | Semgrep, Trivy |
 | GitHub y CI/CD | GitHub Actions, Gitleaks |
-| API | Burp Suite, Postman |
-| Kubernetes y contenedores | kubectl, Helm, kind, Trivy, Kubescape, kube-bench |
+| API | curl con la especificación OpenAPI de VAmPI (Burp Suite, opcional) |
+| Kubernetes y contenedores | kubectl, Helm, kind, Kubescape, Trivy |
 | Infraestructura y criptografía | Nmap, ssh-audit, testssl.sh |
 
 ## Fases del proyecto
@@ -246,9 +248,9 @@ Fases de la metodología CEH (EC-Council), adaptadas a caja blanca:
 2. **Diseño del escenario** empresarial y de activos (NubloPost).
 3. **Despliegue de la arquitectura** como código: plataforma Azure, AzureGoat, VAmPI y Kubernetes on-premise.
 4. **DevSecOps y CI/CD:** análisis automatizado en GitHub Actions (IaC, código, dependencias, secretos, imagen y Kubernetes).
-5. **Pentesting de caja blanca** y detección de vulnerabilidades: Azure, API y Kubernetes, más la revisión de la configuración de GitHub y del pipeline.
-6. **Hardening y mitigación** (TO-BE).
-7. **Re-test y validación:** los mismos escáneres y pruebas sobre el TO-BE.
+5. **Pentesting de caja blanca** en tres sesiones: Azure (AzureGoat), Kubernetes y API (VAmPI), más la revisión de la configuración de GitHub y del pipeline.
+6. **Hardening y mitigación (TO-BE):** recomendación con el arreglo exacto para cada hallazgo; demostración en vivo en VAmPI (`vulnerable=0`) y en Kubernetes (RBAC mínimo).
+7. **Re-test y validación:** repetición de las pruebas de concepto corregidas y re-escaneo de los arreglos de infraestructura como código en el pipeline.
 8. **Evidencias, matriz de cobertura y documentación.**
 9. **Presentación final y conclusiones.**
 
@@ -265,7 +267,7 @@ cloud-security-assessment/
 │   ├── platform/        Estado remoto, resource groups y presupuesto
 │   ├── azuregoat/       AzureGoat original (azurerm ~> 3.11.0)
 │   ├── vampi/           VAmPI en Container Apps
-│   └── monitoring/      Log Analytics y diagnostic settings (opcional)
+│   └── monitoring/      Reservado (el análisis defensivo usa Defender for Cloud y el Activity Log)
 ├── onprem/
 │   ├── ansible/         Configuración del servidor Ubuntu (Docker, kind, kubectl, Helm)
 │   └── kubernetes/      kind-config, api-test-client y políticas

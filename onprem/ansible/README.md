@@ -1,6 +1,6 @@
 # Servidor on-premise (Ubuntu Server 24.04)
 
-Servidor "on-premise" de NubloPost: una VM en VirtualBox que aloja Docker y, a partir del Día 3, el clúster Kubernetes local.
+Servidor "on-premise" de NubloPost: una VM en VirtualBox que aloja Docker y el clúster Kubernetes local (kind).
 
 ## Máquina virtual (VirtualBox)
 

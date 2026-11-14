@@ -13,6 +13,6 @@
 
 - **Imagen:** el workflow `.github/workflows/build-vampi.yml` construye este directorio con su `Dockerfile` original y la publica en `ghcr.io/pentesting-nublopost-onprem/vampi`.
 - **Despliegue:** Azure Container Apps (`terraform/vampi`).
-- **Caja blanca:** el código está en el repositorio para revisarlo con Semgrep, Bandit y pip-audit además de probar la API en ejecución.
+- **Caja blanca:** el código está en el repositorio para revisarlo con Semgrep y Trivy (dependencias) además de probar la API en ejecución.
 
 Las debilidades del `Dockerfile` y de las dependencias (imagen base sin fijar, ejecución como root, versiones antiguas) se mantienen: forman parte del estado AS-IS que se analiza.
