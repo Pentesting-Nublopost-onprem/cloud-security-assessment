@@ -1,7 +1,7 @@
 variable "location" {
   description = "Región de la plataforma y de VAmPI."
   type        = string
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "azuregoat_location" {
