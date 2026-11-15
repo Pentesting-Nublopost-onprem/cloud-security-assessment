@@ -1,0 +1,15 @@
+# Configuración de Checkov para el workflow security-scan.
+# No bloquea (soft-fail): el repositorio contiene laboratorios vulnerables
+# a propósito y los resultados alimentan el informe.
+framework:
+  - terraform
+  - kubernetes
+  - dockerfile
+  - github_actions
+  - ansible
+# Dependencias de terceros incluidas en la Function App de AzureGoat
+skip-path:
+  - terraform/azuregoat/modules/module-1/resources/azure_function/data/.python_packages
+compact: true
+quiet: true
+soft-fail: true

@@ -1,0 +1,240 @@
+name: security-scan
+
+# Escáneres del pipeline (fase 2 de la metodología): Checkov (IaC), Semgrep
+# (código), Trivy (dependencias e imagen de VAmPI) y Gitleaks (secretos en
+# todo el historial). No bloquean: el repositorio contiene laboratorios
+# vulnerables a propósito. Los resultados van a Security > Code scanning y
+# quedan como artefactos SARIF para el informe.
+#
+# Cadena de suministro: acciones fijadas a SHA de commit, Checkov y Semgrep
+# fijados por versión, y Trivy y Gitleaks descargados de su release oficial
+# con el SHA-256 comprobado (sin trivy-action, cuyos tags se comprometieron
+# en marzo de 2026). Configuración de cada herramienta en security/.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHECKOV_VERSION: "3.4.3"
+  SEMGREP_VERSION: "1.184.0"
+  TRIVY_VERSION: "0.76.2"
+  TRIVY_SHA256: "bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf"
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+
+jobs:
+  checkov:
+    name: Checkov · IaC y workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Preparar Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Checkov ${{ env.CHECKOV_VERSION }}
+        run: python -m pip install --disable-pip-version-check "checkov==${CHECKOV_VERSION}"
+
+      - name: Terraform, Kubernetes, Dockerfile, Ansible y workflows
+        run: >-
+          checkov --config-file security/checkov/checkov.yaml --directory .
+          --output cli --output sarif --output-file-path console,checkov.sarif
+
+      - name: Publicar en Code scanning
+        if: always() && hashFiles('checkov.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: checkov.sarif
+          category: checkov
+
+      - name: Guardar el SARIF
+        if: always() && hashFiles('checkov.sarif') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sarif-checkov
+          path: checkov.sarif
+          retention-days: 30
+
+      - name: Resumen
+        if: always() && hashFiles('checkov.sarif') != ''
+        run: echo "**Checkov:** $(jq '[.runs[].results[]] | length' checkov.sarif) resultados" >> "$GITHUB_STEP_SUMMARY"
+
+  semgrep:
+    name: Semgrep · código
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Preparar Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Semgrep ${{ env.SEMGREP_VERSION }}
+        run: python -m pip install --disable-pip-version-check "semgrep==${SEMGREP_VERSION}"
+
+      - name: VAmPI, Functions de AzureGoat y api-test-client
+        run: >-
+          semgrep scan --metrics=off
+          --config p/python --config p/flask --config p/owasp-top-ten
+          --exclude .python_packages
+          --sarif --output semgrep.sarif
+          applications/vampi
+          terraform/azuregoat/modules/module-1/resources/azure_function
+          onprem/kubernetes/api-test-client
+
+      - name: Publicar en Code scanning
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      - name: Guardar el SARIF
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sarif-semgrep
+          path: semgrep.sarif
+          retention-days: 30
+
+      - name: Resumen
+        if: always() && hashFiles('semgrep.sarif') != ''
+        run: echo "**Semgrep:** $(jq '[.runs[].results[]] | length' semgrep.sarif) resultados" >> "$GITHUB_STEP_SUMMARY"
+
+  trivy:
+    name: Trivy · dependencias e imagen
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Trivy ${{ env.TRIVY_VERSION }} (SHA-256 comprobado)
+        run: |
+          curl -fsSLo "$RUNNER_TEMP/trivy.tar.gz" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  $RUNNER_TEMP/trivy.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/trivy.tar.gz" -C "$RUNNER_TEMP" trivy
+          sudo install -m 0755 "$RUNNER_TEMP/trivy" /usr/local/bin/trivy
+
+      - name: Dependencias del repositorio
+        run: >-
+          trivy fs --scanners vuln --severity CRITICAL,HIGH,MEDIUM
+          --format sarif --output trivy-fs.sarif .
+
+      - name: Imagen de VAmPI en GHCR
+        run: >-
+          trivy image --scanners vuln --severity CRITICAL,HIGH,MEDIUM
+          --format sarif --output trivy-image.sarif
+          "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vampi:latest"
+
+      - name: Publicar dependencias en Code scanning
+        if: always() && hashFiles('trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+      - name: Publicar imagen en Code scanning
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      - name: Guardar los SARIF
+        if: always() && hashFiles('trivy-*.sarif') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sarif-trivy
+          path: trivy-*.sarif
+          retention-days: 30
+
+      - name: Resumen
+        if: always() && hashFiles('trivy-*.sarif') != ''
+        run: |
+          for f in trivy-*.sarif; do
+            echo "**Trivy (${f#trivy-}):** $(jq '[.runs[].results[]] | length' "$f") resultados" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+  gitleaks:
+    name: Gitleaks · secretos en el historial
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Descargar el código con todo el historial
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Instalar Gitleaks ${{ env.GITLEAKS_VERSION }} (SHA-256 comprobado)
+        run: |
+          curl -fsSLo "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          sudo install -m 0755 "$RUNNER_TEMP/gitleaks" /usr/local/bin/gitleaks
+
+      - name: Todos los commits (secretos ocultos en la salida)
+        run: >-
+          gitleaks git --config security/gitleaks/gitleaks.toml
+          --redact --no-banner --exit-code 0
+          --report-format sarif --report-path gitleaks.sarif .
+
+      - name: Publicar en Code scanning
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
+
+      - name: Guardar el SARIF
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sarif-gitleaks
+          path: gitleaks.sarif
+          retention-days: 30
+
+      - name: Resumen
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        run: echo "**Gitleaks:** $(jq '[.runs[].results[]] | length' gitleaks.sarif) resultados" >> "$GITHUB_STEP_SUMMARY"

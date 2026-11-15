@@ -221,7 +221,7 @@ Problemas visibles ya en el AS-IS:
 Fases de la metodología CEH (EC-Council), adaptadas a caja blanca. El detalle (sesiones de prueba, formato de cada hallazgo, criptografía y evidencias) está en [`pentest/methodology.md`](pentest/methodology.md).
 
 1. **Reconocimiento:** arquitectura, inventario de activos, repositorio, identidades y permisos.
-2. **Escaneo y enumeración:** escáneres en el pipeline (IaC, código, dependencias, secretos e imagen), Kubescape sobre el clúster y comprobaciones de criptografía.
+2. **Escaneo y enumeración:** escáneres en el pipeline (IaC, código, dependencias, secretos e imagen), Kubescape sobre el clúster y comprobaciones de criptografía. Los resultados del workflow `security-scan` se ven en *Security → Code scanning* y quedan como artefactos SARIF de cada ejecución.
 3. **Obtención de acceso:** prueba de concepto de cada hallazgo principal, incluida la escalada de privilegios.
 4. **Mantenimiento del acceso:** una demostración de persistencia en Azure, documentada y revertida.
 5. **Borrado de huellas:** qué deja ese ataque en el Activity Log y qué podría manipular un atacante; limpieza de los artefactos propios.

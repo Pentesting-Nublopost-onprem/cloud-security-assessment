@@ -1,0 +1,12 @@
+# Configuración de Gitleaks para el workflow security-scan.
+# Reglas por defecto de Gitleaks. Solo se excluyen las dependencias de
+# terceros incluidas en la Function App de AzureGoat (falsos positivos en
+# ejemplos y docstrings). Los secretos del laboratorio se siguen detectando.
+title = "cloud-security-assessment"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Dependencias de terceros de la Function App de AzureGoat"
+paths = ['''terraform/azuregoat/modules/module-1/resources/azure_function/data/\.python_packages/''']
