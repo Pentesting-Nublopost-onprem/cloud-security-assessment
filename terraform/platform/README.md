@@ -4,7 +4,7 @@ Base común del laboratorio en Azure. Se despliega una vez, antes que las demás
 
 | Recurso | Nombre | Para qué |
 |---|---|---|
-| Grupos de recursos | `rg-platform` y `rg-vampi` (swedencentral), `azuregoat_app` (eastus) | Separar la plataforma de las pilas vulnerables. `azuregoat_app` lo exige AzureGoat |
+| Grupos de recursos | `rg-platform`, `rg-vampi` y `azuregoat_app` (swedencentral) | Separar la plataforma de las pilas vulnerables. `azuregoat_app` lo exige AzureGoat |
 | Storage del estado | `tfstate<hash>` + contenedor `tfstate` | Estado remoto de todas las raíces. Sin claves compartidas: solo Entra ID |
 | Rol de datos | Storage Blob Data Contributor sobre `tfstate` | Para quien ejecuta Terraform (el operador) |
 | Presupuesto | `budget-cloud-security-lab` | Avisos al 50 % y 80 % del gasto real y al 100 % del previsto |

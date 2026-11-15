@@ -5,9 +5,9 @@ variable "location" {
 }
 
 variable "azuregoat_location" {
-  description = "Región del grupo de AzureGoat (sus recursos se despliegan en eastus)."
+  description = "Región del grupo de AzureGoat. Sus recursos usan la variable location de la raíz azuregoat (por defecto también swedencentral)."
   type        = string
-  default     = "eastus"
+  default     = "swedencentral"
 }
 
 variable "create_budget" {
