@@ -50,6 +50,7 @@ secret.yaml
 
 # ── IDE / sistema ─────────────────────────────────────────
 .vscode/
+*.code-workspace
 .idea/
 Thumbs.db
 .DS_Store
