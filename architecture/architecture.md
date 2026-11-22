@@ -100,4 +100,4 @@ GitHub no tiene ninguna credencial de Azure: Actions construye la imagen de VAmP
 
 ## AS-IS y TO-BE
 
-Las vulnerabilidades de AzureGoat, VAmPI y Kubernetes Goat forman el estado AS-IS y no se corrigen en origen. El TO-BE se documenta por hallazgo en `reports/remediation/` como recomendación con el arreglo exacto: se demuestra en vivo en VAmPI (`vulnerable=0`) y en Kubernetes (RBAC mínimo), y los arreglos de Terraform se validan con los escáneres del pipeline. El detalle de red está en [network-design.md](network-design.md).
+Las vulnerabilidades de AzureGoat, VAmPI y Kubernetes Goat forman el estado AS-IS y no se corrigen en origen. El TO-BE se documenta en el [informe final](../reports/final-report/informe-final.md), hallazgo a hallazgo, con el arreglo exacto (cambio de código, de Terraform o de manifiesto). Por falta de tiempo no se desplegó ni se repitieron las pruebas. El detalle de red está en [network-design.md](network-design.md).

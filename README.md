@@ -262,20 +262,19 @@ AS-IS → Vulnerabilidades (Fase 5) → Hardening (Fase 6) → Re-test (Fase 7) 
 
 ```
 cloud-security-assessment/
-├── architecture/        Arquitectura, diagramas, diseño de red y alcance
+├── architecture/          Arquitectura, diseño de red y alcance
 ├── terraform/
-│   ├── platform/        Estado remoto, resource groups y presupuesto
-│   ├── azuregoat/       AzureGoat original (azurerm ~> 3.11.0)
-│   ├── vampi/           VAmPI en Container Apps
-│   └── monitoring/      Reservado (el análisis defensivo usa Defender for Cloud y el Activity Log)
+│   ├── platform/          Estado remoto, resource groups y presupuesto
+│   ├── azuregoat/         AzureGoat (azurerm ~> 3.11.0) con los cambios de UPSTREAM.md
+│   └── vampi/             VAmPI en Container Apps
 ├── onprem/
-│   ├── ansible/         Configuración del servidor Ubuntu (Docker, kind, kubectl, Helm)
-│   └── kubernetes/      kind-config, api-test-client y políticas
-├── applications/vampi/  Imagen de la API
-├── .github/workflows/   build-vampi · security-scan
-├── security/            Configuración de Checkov, Semgrep, Trivy, Gitleaks y Kubescape
-├── pentest/             Metodología, pruebas y evidencias por dominio
-└── reports/             Hallazgos, remediación e informe final
+│   ├── ansible/           Configuración del servidor Ubuntu (Docker, kind, kubectl, Helm)
+│   └── kubernetes/        kind-config, Kubernetes Goat y api-test-client
+├── applications/vampi/    Imagen de la API
+├── .github/workflows/     build-vampi · security-scan
+├── security/              Configuración de Checkov y Gitleaks
+├── pentest/               Metodología (las evidencias en bruto no se versionan)
+└── reports/final-report/  Informe final (Markdown y PDF) y evidencias publicadas
 ```
 
 Cada carpeta de `terraform/` es un módulo raíz independiente, con su propio estado: AzureGoat necesita `azurerm ~> 3.11.0` y esa versión no incluye Container Apps.
