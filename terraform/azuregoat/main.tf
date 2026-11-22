@@ -394,7 +394,7 @@ resource "azurerm_virtual_machine" "dev-vm" {
   network_interface_ids = [azurerm_network_interface.net_int.id]
 
 
-  vm_size = "Standard_B1s"
+  vm_size = "Standard_D2s_v7"
 
   delete_os_disk_on_termination = true
 
@@ -406,7 +406,7 @@ resource "azurerm_virtual_machine" "dev-vm" {
   storage_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
+    sku       = "22_04-lts-gen2"
     version   = "latest"
   }
   storage_os_disk {
