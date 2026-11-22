@@ -24,7 +24,7 @@ terraform apply
 - El `apply` tarda entre 10 y 15 minutos. La salida `Target_URL` es la aplicación web.
 - Durante el `apply`, la salida de algunos pasos aparece como *suppressed*: Terraform la oculta porque llevan claves.
 
-**Nunca hagas commit desde ese clon:** los `local-exec` de AzureGoat escriben claves reales en ficheros del repositorio (`local.settings.json`, `config.txt`…).
+**Nunca hagas commit desde ese clon:** los `local-exec` de AzureGoat escriben claves e IPs reales en ficheros del repositorio. `local.settings.json` se genera en el `apply` a partir de `local.settings.json.example` y está ignorado, pero otros ficheros versionados (como `config.txt`) también se modifican.
 
 ## Destrucción (al acabar la sesión)
 

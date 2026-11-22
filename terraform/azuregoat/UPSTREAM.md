@@ -9,9 +9,9 @@
 
 **Vulnerable a propósito.** Solo se despliega en el laboratorio, en el grupo `azuregoat_app`, y se destruye al acabar la sesión de pruebas.
 
-## Cambios para que se pueda desplegar hoy
+## Cambios respecto al original
 
-Ninguno cambia el comportamiento de la aplicación ni las configuraciones inseguras que forman el laboratorio (contenedores públicos, SSRF, roles excesivos, SSH abierto, secretos en claro…).
+Son cambios para que se pueda desplegar hoy (1 a 7 y 9) y para versionarlo sin credenciales reales (8 y 10). Ninguno cambia el comportamiento de la aplicación ni las configuraciones inseguras que forman el laboratorio (contenedores públicos, SSRF, roles excesivos, SSH abierto, secretos en claro…).
 
 | # | Cambio | Motivo |
 |---|---|---|
@@ -24,6 +24,7 @@ Ninguno cambia el comportamiento de la aplicación ni las configuraciones insegu
 | 7 | `skip_provider_registration = true` en el proveedor | azurerm 3.11 intenta registrar 66 proveedores de recursos, entre ellos los de servicios ya retirados (Service Fabric Mesh, Data Lake Analytics, Media Services). Los que usa AzureGoat ya los registra la raíz `platform` |
 | 8 | Clave de una cuenta de Storage de INE (`blogapidataprjstg`) en una línea comentada de `app/__init__.py`, sustituida por `REDACTED` | Es código muerto: la función usa la variable `CON_STR`. La protección de push de GitHub bloqueaba la subida. Esa cuenta no es del laboratorio y queda fuera del alcance |
 | 9 | VM `Standard_D2s_v7` (antes `Standard_B1s`) con la imagen Gen2 `22_04-lts-gen2` | En swedencentral, `B1s`, `B2s` y `D2s_v3` no estaban disponibles para la suscripción (`SkuNotAvailable`), y las series Bsv2 y Dv5 tenían cuota 0. Dsv7 tiene disponibilidad y cuota, pero solo admite imágenes Gen2. Probado el 17/11/2026: despliega con el recurso `azurerm_virtual_machine` de azurerm 3.11. No cambia la configuración vulnerable de la VM (contraseña, SSH abierto, identidad Contributor) |
+| 10 | La plantilla `local.settings.json` pasa de `azure_function/data/` a `azure_function/local.settings.json.example`, y el `local-exec` la copia a `data/local.settings.json` antes de rellenarla | El `apply` escribe en ese fichero las claves de Cosmos DB y del Storage; así queda fuera del control de versiones y no puede acabar en un commit. El paquete desplegado sigue incluyendo el fichero con los secretos, que es lo que explota el hallazgo AZ-1 del informe |
 
 **Finales de línea:** el original guarda muchos ficheros con CRLF (scripts, claves, JSON y la web compilada). El `.gitattributes` de este repositorio los normaliza a LF. No cambia el comportamiento: la extensión Custom Script de la VM ya convierte `config.sh` a LF antes de ejecutarlo y el resto se lee igual con cualquiera de los dos finales.
 

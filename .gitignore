@@ -29,12 +29,11 @@ kubeconfig.*
 local.settings.json
 
 # ── EXCEPCIÓN: artefactos intencionados del laboratorio ───
-# Claves SSH de prueba, plantilla con placeholders y bundle de CA de la función:
-# forman parte de AzureGoat y sin ellos el laboratorio no funciona.
-# OJO: local.settings.json NUNCA se commitea después de un apply
-# (el local-exec escribe claves reales). Revisar git status antes de cada commit.
+# Claves SSH de prueba y bundle de CA de la función: forman parte de AzureGoat
+# y sin ellos el laboratorio no funciona.
+# local.settings.json no se versiona: el apply lo genera a partir de
+# azure_function/local.settings.json.example y le escribe claves reales.
 !terraform/azuregoat/modules/module-1/resources/storage_account/shared/files/.ssh/keys/*.pem
-!terraform/azuregoat/modules/module-1/resources/azure_function/data/local.settings.json
 !terraform/azuregoat/modules/module-1/resources/azure_function/data/.python_packages/**/cacert.pem
 
 # ── Python ────────────────────────────────────────────────
