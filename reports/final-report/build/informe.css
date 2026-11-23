@@ -1,0 +1,342 @@
+/* Estilo del PDF del informe final (WeasyPrint). Lo usa build_pdf.py. */
+
+@page {
+  size: A4;
+  margin: 24mm 20mm 22mm 22mm;
+
+  @top-left {
+    content: "Cloud Security Assessment · NubloPost";
+    font: 8.5pt "TeX Gyre Termes";
+    color: #5b6670;
+    vertical-align: bottom;
+    padding-bottom: 5mm;
+  }
+  @top-right {
+    content: string(seccion);
+    font: italic 8.5pt "TeX Gyre Termes";
+    color: #5b6670;
+    vertical-align: bottom;
+    padding-bottom: 5mm;
+  }
+  @bottom-left {
+    content: string(autor);
+    font: 8.5pt "TeX Gyre Termes";
+    color: #5b6670;
+    vertical-align: top;
+    padding-top: 5mm;
+  }
+  @bottom-right {
+    content: "Página " counter(page) " de " counter(pages);
+    font: 8.5pt "TeX Gyre Termes";
+    color: #5b6670;
+    vertical-align: top;
+    padding-top: 5mm;
+  }
+}
+
+@page portada {
+  margin: 0;
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-left { content: none; }
+  @bottom-right { content: none; }
+}
+
+html {
+  font-family: "TeX Gyre Termes", "Times New Roman", serif;
+  font-size: 11pt;
+  line-height: 1.38;
+  color: #1b1f23;
+}
+
+body { margin: 0; }
+
+p, li {
+  text-align: justify;
+  hyphens: auto;
+  orphans: 3;
+  widows: 3;
+}
+
+p { margin: 0 0 2.6mm; }
+
+a { color: #1c4a8a; text-decoration: none; }
+
+strong { color: #111; }
+
+hr { display: none; }
+
+/* ── Títulos ─────────────────────────────────────────── */
+
+h2, h3, h4 {
+  font-weight: bold;
+  text-align: left;
+  hyphens: none;
+  break-after: avoid;
+  color: #13294b;
+  line-height: 1.2;
+}
+
+h2 {
+  string-set: seccion content();
+  bookmark-level: 1;
+  break-before: page;
+  font-size: 17pt;
+  margin: 0 0 6mm;
+  padding-bottom: 2mm;
+  border-bottom: 1pt solid #13294b;
+}
+
+h3 {
+  bookmark-level: 2;
+  font-size: 13pt;
+  margin: 7mm 0 2.8mm;
+}
+
+h4 {
+  bookmark-level: 3;
+  font-size: 12pt;
+  margin: 9mm 0 3.5mm;
+  padding: 2.2mm 3mm;
+  background: #eef2f7;
+  border-left: 3pt solid #13294b;
+}
+
+/* ── Listas ──────────────────────────────────────────── */
+
+ul, ol { margin: 1.5mm 0 3mm; padding-left: 6.5mm; }
+li { margin: 0.9mm 0; }
+li > p { margin: 0 0 1.5mm; }
+
+/* ── Tablas ──────────────────────────────────────────── */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 3mm 0 5mm;
+  font-size: 9.5pt;
+  line-height: 1.28;
+}
+
+th, td {
+  border: 0.5pt solid #a7b0ba;
+  padding: 1.4mm 2mm;
+  vertical-align: top;
+  text-align: left;
+  hyphens: manual;
+}
+
+th { background: #e4e9f0; font-weight: bold; }
+
+tr { break-inside: avoid; }
+
+/* Ficha de cada hallazgo (la genera build_pdf.py a partir de la tabla) */
+
+.bloque-ficha { break-inside: avoid; }
+
+.ficha {
+  margin: 3mm 0 5mm;
+  font-size: 10pt;
+  line-height: 1.28;
+  border: 0.5pt solid #a7b0ba;
+  border-bottom: none;
+}
+
+.ficha .fila {
+  display: flex;
+  border-bottom: 0.5pt solid #a7b0ba;
+}
+
+.ficha .campo {
+  flex: 0 0 22%;
+  padding: 1.4mm 2mm;
+  background: #f1f4f8;
+  font-weight: bold;
+  border-right: 0.5pt solid #a7b0ba;
+  box-sizing: border-box;
+}
+
+.ficha .valor {
+  flex: 1 1 auto;
+  padding: 1.4mm 2mm;
+}
+
+/* ── Código ──────────────────────────────────────────── */
+
+code {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 0.8em;
+  background: #eef1f4;
+  padding: 0 0.5mm;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+pre {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 7.9pt;
+  line-height: 1.35;
+  background: #f4f6f8;
+  border: 0.5pt solid #cfd6dd;
+  border-left: 2.2pt solid #7a8794;
+  padding: 2.4mm 3mm;
+  margin: 2mm 0 4mm;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: left;
+  break-inside: avoid;
+}
+
+pre code { background: none; padding: 0; font-size: 1em; }
+
+/* ── Figuras ─────────────────────────────────────────── */
+
+figure {
+  margin: 4mm 0 5mm;
+  text-align: center;
+  break-inside: avoid;
+}
+
+figure img {
+  max-width: 100%;
+  max-height: 195mm;
+  border: 0.5pt solid #9aa3ad;
+}
+
+figure.diagrama img {
+  max-width: 100%;
+  max-height: 125mm;
+  border: none;
+}
+
+/* ── Resumen ejecutivo: una página ───────────────────── */
+
+#sec-2-resumen-ejecutivo { font-size: 10pt; line-height: 1.32; }
+#sec-2-resumen-ejecutivo table { font-size: 9pt; margin: 2mm 0 3.5mm; }
+#sec-2-resumen-ejecutivo p { margin-bottom: 2mm; }
+
+/* ── Hallazgos complementarios: anchos de columna ────── */
+
+#sec-9-hallazgos-complementarios table { font-size: 9pt; }
+#sec-9-hallazgos-complementarios th:nth-child(1) { width: 33%; }
+#sec-9-hallazgos-complementarios th:nth-child(2) { width: 9%; }
+#sec-9-hallazgos-complementarios th:nth-child(3) { width: 18%; }
+#sec-9-hallazgos-complementarios th:nth-child(4) { width: 25%; }
+#sec-9-hallazgos-complementarios th:nth-child(5) { width: 15%; }
+
+figcaption {
+  font-size: 9.5pt;
+  font-style: italic;
+  color: #3d4650;
+  margin-top: 1.6mm;
+  text-align: center;
+  hyphens: none;
+}
+
+/* ── Notas (esquema de conclusiones) ─────────────────── */
+
+blockquote {
+  margin: 3mm 0 5mm;
+  padding: 3mm 4mm 1.5mm;
+  background: #f7f4ea;
+  border-left: 3pt solid #b08d2e;
+}
+
+blockquote p, blockquote li { text-align: left; }
+
+/* ── Portada ─────────────────────────────────────────── */
+
+.portada {
+  page: portada;
+  break-after: page;
+  string-set: autor attr(data-autor);
+  padding: 42mm 26mm 0;
+}
+
+.portada .tipo {
+  font-size: 11.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5b6670;
+}
+
+.portada h1 {
+  bookmark-level: none;
+  font-size: 31pt;
+  line-height: 1.08;
+  color: #13294b;
+  margin: 5mm 0 3mm;
+}
+
+.portada .subtitulo {
+  font-size: 15.5pt;
+  color: #13294b;
+  margin: 0;
+}
+
+.portada .cliente {
+  font-size: 12.5pt;
+  color: #3d4650;
+  margin: 7mm 0 0;
+}
+
+.portada .raya {
+  width: 42mm;
+  border-top: 2.2pt solid #13294b;
+  margin: 15mm 0 12mm;
+}
+
+.portada table.datos {
+  width: 100%;
+  font-size: 11pt;
+  margin: 0;
+}
+
+.portada table.datos td {
+  border: none;
+  border-bottom: 0.5pt solid #c9d0d8;
+  padding: 2.2mm 0;
+}
+
+.portada table.datos td:first-child {
+  width: 30%;
+  color: #5b6670;
+  font-weight: normal;
+}
+
+.portada .aviso {
+  margin-top: 22mm;
+  font-size: 9.5pt;
+  color: #5b6670;
+  text-align: left;
+}
+
+/* ── Índice ──────────────────────────────────────────── */
+
+nav.indice h2 { string-set: seccion "Índice"; }
+
+nav.indice ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav.indice li {
+  margin: 0;
+  text-align: left;
+  hyphens: none;
+}
+
+nav.indice li a { color: #1b1f23; }
+
+nav.indice li a::after {
+  content: leader(".") target-counter(attr(href), page);
+}
+
+nav.indice li.n2 {
+  font-weight: bold;
+  margin-top: 2.6mm;
+}
+
+nav.indice li.n3 { padding-left: 7mm; font-size: 10.5pt; }
+nav.indice li.n4 { padding-left: 14mm; font-size: 10pt; color: #3d4650; }
