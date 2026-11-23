@@ -93,11 +93,11 @@ GitHub no tiene ninguna credencial de Azure: Actions construye la imagen de VAmP
 | Una raíz de Terraform por pila | AzureGoat exige `azurerm ~> 3.11`; el resto usa la 5.x | — |
 | Terraform desde Azure Cloud Shell | Herramientas listas y sin estado ni claves en el portátil u OneDrive | TO-BE: pipeline de despliegue con OIDC |
 | Storage del estado con endpoint público | Cloud Shell no tiene IP fija | TO-BE: endpoint privado |
-| Sin despliegue desde GitHub (sin OIDC) | Recorte por tiempo: prioridad al pentest | Despliegues manuales; TO-BE: pipeline con OIDC |
+| Sin despliegue desde GitHub (sin OIDC) | Prioridad al pentest | Despliegues manuales; TO-BE: pipeline con OIDC |
 | Container Apps con escala a cero | Coste casi nulo | La base de datos de VAmPI se reinicia y se recrea con `/createdb` |
 | Lista de IPs en lugar de VPN | Simplicidad y coste | Depende de la IP de casa, que puede cambiar |
 | Laboratorio dentro de una VM | Aislar el portátil | F1 es la frontera crítica: snapshot antes de cada sesión |
 
 ## AS-IS y TO-BE
 
-Las vulnerabilidades de AzureGoat, VAmPI y Kubernetes Goat forman el estado AS-IS y no se corrigen en origen. El TO-BE se documenta en el [informe final](../reports/final-report/informe-final.md), hallazgo a hallazgo, con el arreglo exacto (cambio de código, de Terraform o de manifiesto). Por falta de tiempo no se desplegó ni se repitieron las pruebas. El detalle de red está en [network-design.md](network-design.md).
+Las vulnerabilidades de AzureGoat, VAmPI y Kubernetes Goat forman el estado AS-IS y no se corrigen en origen. El TO-BE se documenta en el [informe final](../reports/final-report/informe-final.md), hallazgo a hallazgo, con el arreglo exacto (cambio de código, de Terraform o de manifiesto). No se ha desplegado ni se han repetido las pruebas. El detalle de red está en [network-design.md](network-design.md).

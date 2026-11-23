@@ -6,9 +6,27 @@
 
 ## Objetivo
 
-Diseñar, desplegar y securizar una infraestructura cloud basada en Azure con una parte on-premise (servidor Kubernetes), demostrando el ciclo completo de mejora de seguridad: **vulnerabilidad → control → validación**.
+Diseñar, desplegar y evaluar la seguridad de una infraestructura cloud basada en Azure con una parte on-premise (servidor Kubernetes): de cada **vulnerabilidad** a su **impacto** y a la **corrección** exacta.
 
 La evaluación sigue una metodología de **caja blanca**: se analiza la arquitectura completa (repositorio, pipeline de CI/CD, infraestructura como código, identidades, configuración cloud, Kubernetes y aplicaciones) y cada hallazgo se demuestra con una prueba de concepto controlada.
+
+## Resultados
+
+**Informe final:** [PDF para la entrega](reports/final-report/informe-final.pdf) · [versión Markdown](reports/final-report/informe-final.md)
+
+Pentest de caja blanca siguiendo las cinco fases de CEH: **7 vulnerabilidades principales (6 críticas y 1 alta)**, demostradas paso a paso, y 20 hallazgos complementarios.
+
+| ID | Hallazgo | Severidad (CVSS 3.1) |
+|---|---|---|
+| AZ-1 | SSRF en la Function App → credenciales de Storage, Cosmos DB y JWT | Crítica (9.9) |
+| AZ-2 | Contenedor de Storage público → clave SSH → acceso a la VM | Crítica (9.3) |
+| AZ-3 | Escalada de Contributor a Owner a través de Azure Automation | Crítica (9.1) |
+| K8S-1 | RBAC excesivo → Secret → acceso a la API de Azure (cadena on-premise → cloud) | Crítica (9.9) |
+| K8S-2 | Contenedor privilegiado → nodo del clúster | Crítica (9.9) |
+| API-1 | Autorización rota a nivel de objeto (BOLA): cambio de la contraseña de otro usuario | Alta (8.1) |
+| API-2 | Inyección SQL con volcado de credenciales | Crítica (9.1) |
+
+Cada hallazgo incluye el proceso completo, el impacto y la corrección exacta; las correcciones se documentan sin desplegarlas. Las capturas publicadas, con URLs, IPs, identificadores, tokens y contraseñas ocultos, están en [`reports/final-report/evidencias/`](reports/final-report/evidencias/).
 
 ## Escenario: NubloPost, S.L.
 
@@ -79,7 +97,7 @@ flowchart LR
 
 **Repositorio:** `cloud-security-assessment` (este): infraestructura, aplicaciones, workflows seguros y documentación.
 
-Los escenarios de CI/CD vulnerables (repositorio aparte `cicd-vulnerable-demo`) quedan fuera del alcance actual por falta de tiempo; se podrán añadir como ampliación.
+Los escenarios de CI/CD vulnerables (repositorio aparte `cicd-vulnerable-demo`) quedan fuera del alcance actual; se podrán añadir como ampliación.
 
 ## Activos
 
@@ -146,8 +164,8 @@ Los escenarios de CI/CD vulnerables (repositorio aparte `cicd-vulnerable-demo`) 
 | Servidor on-premise y clúster Kubernetes local | Ataques contra la infraestructura de GitHub o de Microsoft |
 | Repositorio del proyecto y sus workflows (revisión de configuración) | Denegación de servicio y pruebas destructivas |
 | Terraform y configuración desplegada | Ingeniería social |
-| Pruebas de concepto de escalada y persistencia controladas | Persistencia fuera del laboratorio |
-| Revisión de la detección (Defender for Cloud y Activity Log) | Borrado de registros de auditoría reales |
+| Pruebas de concepto de escalada controladas; persistencia documentada | Persistencia fuera del laboratorio |
+| Revisión de la detección (Activity Log) | Borrado de registros de auditoría reales |
 
 **Áreas de seguridad:** IAM, redes, almacenamiento, secretos, aplicaciones y APIs, contenedores, CI/CD, auditoría y hardening.
 
@@ -186,6 +204,8 @@ Problemas visibles ya en el AS-IS:
 
 ## Arquitectura objetivo (TO-BE)
 
+Es la propuesta de remediación del informe; no se ha desplegado.
+
 ```
         Internet
            │
@@ -223,10 +243,10 @@ Fases de la metodología CEH (EC-Council), adaptadas a caja blanca. El detalle (
 1. **Reconocimiento:** arquitectura, inventario de activos, repositorio, identidades y permisos.
 2. **Escaneo y enumeración:** escáneres en el pipeline (IaC, código, dependencias, secretos e imagen), Kubescape sobre el clúster y comprobaciones de criptografía. Los resultados del workflow `security-scan` se ven en *Security → Code scanning* y quedan como artefactos SARIF de cada ejecución.
 3. **Obtención de acceso:** prueba de concepto de cada hallazgo principal, incluida la escalada de privilegios.
-4. **Mantenimiento del acceso:** una demostración de persistencia en Azure, documentada y revertida.
-5. **Borrado de huellas:** qué deja ese ataque en el Activity Log y qué podría manipular un atacante; limpieza de los artefactos propios.
+4. **Mantenimiento del acceso:** cómo mantendría el acceso un atacante con el rol Owner y cómo se detectaría.
+5. **Borrado de huellas:** qué deja el ataque en el Activity Log y qué lo detectaría; limpieza de los artefactos propios. No se borran registros.
 
-**Hallazgos:** entre 6 y 8 principales, repartidos por áreas y explicados paso a paso; el resto, en una tabla complementaria a partir de los escáneres.
+**Hallazgos:** 7 principales, repartidos por áreas y explicados paso a paso; el resto (20), en tablas complementarias por área.
 
 **Matriz de cobertura:** para cada hallazgo principal, qué herramienta lo detecta y qué solo aparece en la revisión manual.
 
@@ -234,11 +254,11 @@ Fases de la metodología CEH (EC-Council), adaptadas a caja blanca. El detalle (
 
 | Área | Herramientas |
 |---|---|
-| Cloud e IaC | Terraform, Azure CLI, Checkov, Trivy, Defender for Cloud |
+| Cloud e IaC | Terraform, Azure CLI, Checkov, Trivy, Activity Log |
 | Configuración on-premise | Ansible |
-| Código y dependencias | Semgrep, Trivy |
+| Código y dependencias | Semgrep, Trivy, npm audit |
 | GitHub y CI/CD | GitHub Actions, Gitleaks |
-| API | curl con la especificación OpenAPI de VAmPI (Burp Suite, opcional) |
+| API | curl y jq con la especificación OpenAPI de VAmPI |
 | Kubernetes y contenedores | kubectl, Helm, kind, Kubescape, Trivy |
 | Infraestructura y criptografía | Nmap, ssh-audit, testssl.sh |
 
@@ -249,13 +269,12 @@ Fases de la metodología CEH (EC-Council), adaptadas a caja blanca. El detalle (
 3. **Despliegue de la arquitectura** como código: plataforma Azure, AzureGoat, VAmPI y Kubernetes on-premise.
 4. **DevSecOps y CI/CD:** análisis automatizado en GitHub Actions (IaC, código, dependencias, secretos, imagen y Kubernetes).
 5. **Pentesting de caja blanca** en tres sesiones: Azure (AzureGoat), Kubernetes y API (VAmPI), más la revisión de la configuración de GitHub y del pipeline.
-6. **Hardening y mitigación (TO-BE):** recomendación con el arreglo exacto para cada hallazgo; demostración en vivo en VAmPI (`vulnerable=0`) y en Kubernetes (RBAC mínimo).
-7. **Re-test y validación:** repetición de las pruebas de concepto corregidas y re-escaneo de los arreglos de infraestructura como código en el pipeline.
-8. **Evidencias, matriz de cobertura y documentación.**
-9. **Presentación final y conclusiones.**
+6. **Mitigación (TO-BE):** el arreglo exacto para cada hallazgo (código, Terraform o manifiesto), documentado en el informe. No se ha desplegado: la demostración en vivo y el re-test quedan como trabajo futuro.
+7. **Evidencias, matriz de cobertura e informe final.**
+8. **Presentación final y conclusiones.**
 
 ```
-AS-IS → Vulnerabilidades (Fase 5) → Hardening (Fase 6) → Re-test (Fase 7) → Conclusiones (Fase 9)
+Entorno → Despliegue como código → Escáneres → Pentest (3 sesiones) → Mitigación documentada → Informe y conclusiones
 ```
 
 ## Estructura del repositorio

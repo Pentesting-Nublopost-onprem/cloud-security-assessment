@@ -27,7 +27,7 @@ Documento de referencia para todas las pruebas del proyecto **Cloud Security Ass
 ## 4. Fuera del alcance
 
 - Cualquier recurso fuera de los resource groups del laboratorio y del repositorio del proyecto.
-- Escenarios de CI/CD vulnerables (repositorio `cicd-vulnerable-demo`): aplazados por falta de tiempo; quedan como ampliación.
+- Escenarios de CI/CD vulnerables (repositorio `cicd-vulnerable-demo`): aplazados; quedan como ampliación.
 - La infraestructura de Microsoft Azure, GitHub o terceros (planos de control y servicios compartidos).
 - Denegación de servicio, pruebas de carga y acciones destructivas no reversibles.
 - Ingeniería social y cualquier prueba dirigida a personas.
@@ -38,11 +38,12 @@ Documento de referencia para todas las pruebas del proyecto **Cloud Security Ass
 - **Ventanas de prueba:** los recursos de Azure solo están desplegados durante las sesiones de trabajo y se destruyen al terminar.
 - **Exposición mínima:** VAmPI solo acepta conexiones desde la IP del auditor; el API server de Kubernetes nunca se expone a Internet.
 - **Credenciales de prueba:** ficticias, canario o de alcance mínimo; nunca credenciales personales ni reutilizables.
-- **Persistencia y cambios:** solo para demostrar impacto; se documentan y se revierten en la misma sesión.
+- **Persistencia y cambios:** los cambios solo se hacen para demostrar impacto y se revierten en la misma sesión; no se deja persistencia en el laboratorio.
 - **Registros de auditoría:** no se borran; se analiza qué podría manipular un atacante y qué evidencias se conservan.
 - **Terraform:** nunca se ejecuta desde una carpeta sincronizada en la nube (OneDrive); solo desde Azure Cloud Shell o un entorno Linux.
 
 ## 6. Tratamiento de evidencias
 
 - Capturas y salidas de herramientas se guardan en `pentest/evidence/`, excluido del control de versiones por defecto; se revisan antes de publicar nada.
+- Las capturas publicadas en el informe están en `reports/final-report/evidencias/`, recortadas y con URLs e IPs ocultas.
 - Claves, tokens y connection strings se ocultan en capturas e informes, aunque pertenezcan a recursos ya destruidos.

@@ -40,7 +40,7 @@ Con cero réplicas en reposo, el coste es casi nulo (Container Apps tiene una cu
 terraform destroy -var 'allowed_ip=<tu IP pública>'
 ```
 
-## Notas para el informe
+## Notas
 
-- `vulnerable = 1` es el estado AS-IS. Con `-var 'vulnerable=0'` VAmPI activa sus controles: es parte de la demostración TO-BE.
+- `vulnerable = 1` es el estado AS-IS, el que se evaluó. Con `-var 'vulnerable=0'` VAmPI activa sus controles; el informe usa esa versión corregida como referencia de la remediación, sin desplegarla.
 - La base de datos vive dentro del contenedor: al escalar a cero se pierde y se reinicia con `GET /createdb`.

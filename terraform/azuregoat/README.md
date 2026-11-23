@@ -36,4 +36,4 @@ Comprueba después que `azuregoat_app` está vacío: `az resource list -g azureg
 
 ## Pruebas
 
-La sesión de Azure (hallazgos previstos, persistencia, Activity Log y criptografía) está en [`pentest/methodology.md`](../../pentest/methodology.md).
+Resultados de la sesión de Azure (hallazgos AZ-1 a AZ-3, persistencia, Activity Log y criptografía): [informe final](../../reports/final-report/informe-final.md). Metodología: [`pentest/methodology.md`](../../pentest/methodology.md).

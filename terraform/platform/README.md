@@ -11,7 +11,7 @@ Base común del laboratorio en Azure. Se despliega una vez, antes que las demás
 
 Además registra los proveedores de recursos de todas las pilas (Container Apps, Functions, Cosmos DB…), porque azurerm 5.x ya no lo hace solo.
 
-**Sin despliegue desde GitHub.** Todas las raíces se aplican desde Azure Cloud Shell con la sesión del operador; GitHub no tiene ninguna credencial de Azure. La identidad OIDC prevista para desplegar desde GitHub Actions se descartó el 15/11/2026 para ganar tiempo.
+**Sin despliegue desde GitHub.** Todas las raíces se aplican desde Azure Cloud Shell con la sesión del operador; GitHub no tiene ninguna credencial de Azure. La identidad OIDC prevista para desplegar desde GitHub Actions se descartó para priorizar el pentest.
 
 ## Primer despliegue (Azure Cloud Shell, Bash)
 
@@ -44,4 +44,4 @@ terraform apply -var 'alert_email=tu@correo'
 - **Endpoint público del Storage:** Cloud Shell no tiene IP fija. El acceso exige identidad y rol de datos. TO-BE: endpoint privado.
 - **Sin credenciales de Azure en GitHub:** nada que robar desde el repositorio o un workflow. TO-BE, si el despliegue pasa a GitHub Actions: identidad con credencial federada OIDC, limitada a un environment de `main` con aprobación.
 - **Presupuesto:** avisa, no corta el gasto. Los recursos facturables se destruyen al acabar.
-- **Región:** West Europe no admitía altas nuevas el 14/11/2026; por eso `swedencentral` es la región por defecto.
+- **Región:** West Europe no admitía altas nuevas para la suscripción; por eso `swedencentral` es la región por defecto.

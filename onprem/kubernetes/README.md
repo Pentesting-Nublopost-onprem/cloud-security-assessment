@@ -69,11 +69,11 @@ Se despliegan todos los escenarios, pero la sesión de Kubernetes se centra en t
 |---|---|---|
 | RBAC y Secrets | `insecure-rbac` (cuenta de servicio con permisos de administrador del clúster) → Secret del pod `api-test-client` → API de Azure | Hallazgo principal: cadena on-prem → cloud |
 | Contenedores privilegiados | `system-monitor` (acceso al nodo) | Hallazgo principal |
-| Secretos en código e imágenes | `build-code`, `hidden-in-layers` | Tabla complementaria |
+| Secretos en código e imágenes | `build-code`, `hidden-in-layers` | Fuera del informe |
 
 - **Enumeración:** un escaneo de Kubescape sobre el clúster al empezar la sesión.
-- **TO-BE en vivo:** RBAC mínimo (sin el binding de `cluster-admin`) y repetición de la prueba: la lectura del Secret se deniega y la cadena se rompe.
-- **Network Policies** (`cache-store`): solo como recomendación. El CNI de kind (kindnet) las aplica, así que se puede validar si sobra tiempo.
+- **Corrección:** RBAC mínimo (sin el binding de `cluster-admin`), Pod Security Admission y credenciales fuera del clúster, documentados en el [informe final](../../reports/final-report/informe-final.md). No se aplicaron en vivo.
+- **Network Policies** (`cache-store`): solo como recomendación. El CNI de kind (kindnet) las aplica.
 
 ## Controles del laboratorio
 
@@ -83,10 +83,10 @@ Se despliegan todos los escenarios, pero la sesión de Kubernetes se centra en t
 - **La frontera de aislamiento es la VM:** los nodos de kind son contenedores privilegiados y varios escenarios montan rutas del nodo. Snapshot antes de cada sesión de pruebas.
 - **Imágenes de Docker Hub sin autenticar:** límite de 100 descargas cada 6 horas por IP; un despliegue completo usa unas 15.
 
-## Notas para el informe
+## Notas de seguridad del laboratorio
 
 - **Cadena de suministro:** versiones fijadas, SHA-256 comprobado en cada descarga y nodo fijado por digest. Mejora TO-BE: fijar también los hashes en el repositorio o verificar las firmas (cosign en Kubernetes, GPG en Helm), porque binario y checksum salen del mismo servidor.
-- **Imágenes sin versión:** los manifiestos de Kubernetes Goat usan imágenes sin etiqueta (`latest`), que los escáneres marcarán como hallazgo.
+- **Imágenes sin versión:** los manifiestos de Kubernetes Goat usan imágenes sin etiqueta (`latest`), una mala práctica de cadena de suministro.
 - **Exposición por defecto:** el script de acceso oficial publica los escenarios en todas las interfaces; aquí se corrige con `lab.sh`.
 
 ## Problemas típicos
